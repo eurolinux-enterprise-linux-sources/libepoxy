@@ -1,0 +1,27 @@
+From 0096b79923f4a2b73b004f679d48ef110936a459 Mon Sep 17 00:00:00 2001
+From: Eric Anholt <eric@anholt.net>
+Date: Fri, 13 Jun 2014 15:00:31 -0700
+Subject: [PATCH 2/3] Fix context type detection if we find
+ eglGetCurrentContext().
+
+Fixes #29.
+---
+ src/dispatch_common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/dispatch_common.c b/src/dispatch_common.c
+index b36b639..4e34d6e 100644
+--- a/src/dispatch_common.c
++++ b/src/dispatch_common.c
+@@ -378,7 +378,7 @@ epoxy_current_context_is_glx(void)
+     sym = dlsym(NULL, "eglGetCurrentContext");
+     if (sym) {
+         if (epoxy_egl_get_current_gl_context_api() != EGL_NONE)
+-            return true;
++            return false;
+     } else {
+         (void)dlerror();
+     }
+-- 
+1.9.3
+

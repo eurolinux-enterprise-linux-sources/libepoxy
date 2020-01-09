@@ -1,0 +1,60 @@
+From b2ae054b3aa0d6796b6936c7a89b8cce7cefe7ba Mon Sep 17 00:00:00 2001
+From: Eric Anholt <eric@anholt.net>
+Date: Fri, 13 Jun 2014 15:54:29 -0700
+Subject: [PATCH 3/3] Avoid name conflicts between pkgconfig's EGL_LIBS and a
+ temporary var.
+
+I felt a little uncomfortable knowing I had two things defining
+EGL_LIBS, but it worked on my system.  It failed on the travis ci
+build.
+---
+ test/Makefile.am | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/test/Makefile.am b/test/Makefile.am
+index f29baca..1892b17 100644
+--- a/test/Makefile.am
++++ b/test/Makefile.am
+@@ -22,9 +22,9 @@
+ EPOXY = $(builddir)/../src/libepoxy.la
+ 
+ check_LTLIBRARIES = \
+-	$(EGL_LIBS) \
+-	$(GLX_LIBS) \
+-	$(WGL_LIBS) \
++	$(EGL_UTIL_LIB) \
++	$(GLX_UTIL_LIB) \
++	$(WGL_UTIL_LIB) \
+ 	$()
+ 
+ libegl_common_la_SOURCES = \
+@@ -78,7 +78,7 @@ EGL_TESTS = \
+ 	egl_gles2_without_glx \
+ 	$()
+ 
+-EGL_LIBS = libegl_common.la
++EGL_UTIL_LIB = libegl_common.la
+ endif
+ 
+ if BUILD_GLX
+@@ -116,7 +116,7 @@ GLX_TESTS = \
+         $(GLX_NON_APPLE_TESTS) \
+ 	$()
+ 
+-GLX_LIBS = libglx_common.la
++GLX_UTIL_LIB = libglx_common.la
+ endif
+ 
+ if BUILD_WGL
+@@ -127,7 +127,7 @@ WGL_TESTS = \
+ 	wgl_usefontbitmaps_unicode$(EXEEXT) \
+ 	$()
+ 
+-WGL_LIBS = libwgl_common.la
++WGL_UTIL_LIB = libwgl_common.la
+ endif
+ 
+ egl_has_extension_nocontext_LDADD = $(EPOXY) libegl_common.la $(X11_LIBS)
+-- 
+1.9.3
+
