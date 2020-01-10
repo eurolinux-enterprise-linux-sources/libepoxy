@@ -1,0 +1,57 @@
+From d56f21c494b315306215c4730835a9b291360e9b Mon Sep 17 00:00:00 2001
+From: Eric Anholt <eric@anholt.net>
+Date: Fri, 13 Jun 2014 14:59:37 -0700
+Subject: [PATCH 1/3] Use the EGL pkgconfig for finding eglplatform.h.
+
+We don't ever explicity link against libEGL, so no need to make use of
+EGL_LIBS.
+
+Fixes #30.
+---
+ configure.ac     | 1 +
+ src/Makefile.am  | 1 +
+ test/Makefile.am | 4 +++-
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 399e351..f97c9b0 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -98,6 +98,7 @@ AC_SUBST(EPOXY_LINK_LIBS)
+ 
+ AM_CONDITIONAL(BUILD_EGL, test x$build_egl = xyes)
+ if test x$build_egl = xyes; then
++    PKG_CHECK_MODULES(EGL, [egl])
+     AC_DEFINE([BUILD_EGL], [1], [build EGL tests])
+ fi
+ 
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 8e20cd6..49c3507 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -28,6 +28,7 @@ AM_CFLAGS = \
+ 	$(CWARNFLAGS) \
+ 	$(VISIBILITY_CFLAGS) \
+ 	$(X11_CFLAGS) \
++	$(EGL_CFLAGS) \
+ 	$()
+ 
+ epoxyincludedir = $(includedir)/epoxy
+diff --git a/test/Makefile.am b/test/Makefile.am
+index ffb330e..f29baca 100644
+--- a/test/Makefile.am
++++ b/test/Makefile.am
+@@ -46,7 +46,9 @@ libwgl_common_la_LIBADD = $(EPOXY)
+ AM_CPPFLAGS = \
+ 	-I$(top_srcdir)/include \
+ 	-I$(top_builddir)/include \
+-	$(X11_CFLAGS)
++	$(X11_CFLAGS) \
++	$(EGL_CFLAGS) \
++	$()
+ 
+ AM_CFLAGS = $(CWARNFLAGS)
+ 
+-- 
+1.9.3
+
