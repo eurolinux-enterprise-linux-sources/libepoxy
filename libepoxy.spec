@@ -5,13 +5,16 @@
 
 Summary: epoxy runtime library
 Name: libepoxy
-Version: 1.2
-Release: 2%{?dist}
+Version: 1.3.1
+Release: 1%{?dist}
 License: MIT
 URL: http://github.com/anholt/libepoxy
 # github url - generated archive
 #ource0: https://github.com/anholt/libepoxy/archive/%{commit}/%{name}-%{commit}.tar.gz
-Source0: https://github.com/anholt/libepoxy/archive/%{commit}/v%{version}.tar.gz
+Source0: https://github.com/anholt/libepoxy/archive/v%{version}/v%{version}.tar.gz
+
+Patch0: 0001-test-Fix-dlwrap-on-ppc64-and-s390x.patch
+Patch1: 0001-Fix-ppc64le-and-arm64.patch
 
 BuildRequires: automake autoconf libtool
 BuildRequires: mesa-libGL-devel
@@ -19,10 +22,6 @@ BuildRequires: mesa-libEGL-devel
 BuildRequires: mesa-libGLES-devel
 BuildRequires: xorg-x11-util-macros
 BuildRequires: python
-
-Patch1: 0001-Use-the-EGL-pkgconfig-for-finding-eglplatform.h.patch
-Patch2: 0002-Fix-context-type-detection-if-we-find-eglGetCurrentC.patch
-Patch3: 0003-Avoid-name-conflicts-between-pkgconfig-s-EGL_LIBS-an.patch
 
 %description
 A library for handling OpenGL function pointer management.
@@ -37,9 +36,8 @@ developing applications that use %{name}.
 
 %prep
 %setup -q
+%patch0 -p1
 %patch1 -p1
-%patch2 -p1
-%patch3 -p1
 
 %build
 autoreconf -vif || exit 1
@@ -55,11 +53,7 @@ find $RPM_BUILD_ROOT -type f -name '*.la' -delete -print
 %check
 # In theory this is fixed in 1.2 but we still see errors on most platforms
 # https://github.com/anholt/libepoxy/issues/24
-%ifnarch %{arm} aarch64 %{power64} s390x
-make check
-%else
-make check ||:
-%endif
+make check # || ( cat test/test-suite.log ; objdump -T %{_libdir}/libdl.so.? )
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -76,6 +70,9 @@ make check ||:
 %{_libdir}/pkgconfig/epoxy.pc
 
 %changelog
+* Fri Jan 27 2017 Adam Jackson <ajax@redhat.com> - 1.3.1-1
+- libepoxy 1.3.1
+
 * Wed Mar 25 2015 Adam Jackson <ajax@redhat.com> 1.2-2
 - Fix description to not talk about DRM
 - Sync some small bugfixes from git
