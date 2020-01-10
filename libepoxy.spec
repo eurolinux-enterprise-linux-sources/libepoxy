@@ -1,23 +1,10 @@
-#global gitdate 20140411
-
-#global commit 6eb075c70e2f91a9c45a90677bd46e8fb0432655
-#global shortcommit %(c=%{commit}; echo ${c:0:7})
-
 Summary: epoxy runtime library
 Name: libepoxy
-Version: 1.3.1
-Release: 2%{?dist}
+Version: 1.5.2
+Release: 1%{?dist}
 License: MIT
 URL: http://github.com/anholt/libepoxy
-# github url - generated archive
-#ource0: https://github.com/anholt/libepoxy/archive/%{commit}/%{name}-%{commit}.tar.gz
-Source0: https://github.com/anholt/libepoxy/archive/v%{version}/v%{version}.tar.gz
-
-Patch0: 0001-test-Fix-dlwrap-on-ppc64-and-s390x.patch
-Patch1: 0001-Fix-ppc64le-and-arm64.patch
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=1566101
-Patch2: libepoxy-handle-lack-of-GLX.patch
+Source0: %{url}/releases/download/%{version}/%{name}-%{version}.tar.xz
 
 BuildRequires: automake autoconf libtool
 BuildRequires: mesa-libGL-devel
@@ -25,6 +12,8 @@ BuildRequires: mesa-libEGL-devel
 BuildRequires: mesa-libGLES-devel
 BuildRequires: xorg-x11-util-macros
 BuildRequires: python
+BuildRequires: xorg-x11-server-Xvfb mesa-dri-drivers
+BuildRequires: glx-utils xdpyinfo
 
 %description
 A library for handling OpenGL function pointer management.
@@ -38,10 +27,7 @@ This package contains libraries and header files for
 developing applications that use %{name}.
 
 %prep
-%setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
+%autosetup -p1
 
 %build
 autoreconf -vif || exit 1
@@ -49,15 +35,18 @@ autoreconf -vif || exit 1
 make %{?_smp_mflags}
 
 %install
-make install DESTDIR=$RPM_BUILD_ROOT
+%make_install DESTDIR=$RPM_BUILD_ROOT
 
 # NOTE: We intentionally don't ship *.la files
 find $RPM_BUILD_ROOT -type f -name '*.la' -delete -print
 
 %check
-# In theory this is fixed in 1.2 but we still see errors on most platforms
-# https://github.com/anholt/libepoxy/issues/24
-make check # || ( cat test/test-suite.log ; objdump -T %{_libdir}/libdl.so.? )
+xvfb-run -d -s "-screen 0 640x480x24" make check || \
+%ifarch s390 ppc
+    (cat `find . -name test-suite.log` ; exit 0)
+%else
+    (cat `find . -name test-suite.log` ; exit 1)
+%endif
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -74,6 +63,9 @@ make check # || ( cat test/test-suite.log ; objdump -T %{_libdir}/libdl.so.? )
 %{_libdir}/pkgconfig/epoxy.pc
 
 %changelog
+* Tue May 22 2018 Adam Jackson <ajax@redhat.com> - 1.5.2-1
+- epoxy 1.5.2
+
 * Wed Apr 11 2018 Debarshi Ray <rishi@fedoraproject.org> - 1.3.1-2
 - Prevent crash in epoxy_glx_version if GLX is not available
 Resolves: #1566101
